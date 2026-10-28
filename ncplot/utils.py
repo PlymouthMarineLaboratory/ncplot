@@ -1,5 +1,6 @@
 import subprocess
 
+import numpy as np
 import xarray as xr
 import pandas as pd
 import logging
@@ -7,6 +8,31 @@ import metpy
 
 metpy_log = logging.getLogger("metpy")
 metpy_log.setLevel(logging.CRITICAL)
+
+
+def normalise_lon(ds, lon_name):
+    """
+    Convert longitudes running 0-360 to -180-180 (sorted), as coastlines are drawn on a -180-180 map.
+    The dataset is returned unchanged if the longitudes cannot be converted to a contiguous axis,
+    e.g. a regional subset that straddles 180 degrees.
+    """
+    if lon_name is None or lon_name not in ds.dims:
+        return ds
+
+    lons = ds[lon_name].values
+    if lons.ndim != 1 or len(lons) < 2 or not lons.max() > 180:
+        return ds
+
+    attrs = ds[lon_name].attrs
+    new_ds = ds.assign_coords({lon_name: ((ds[lon_name] + 180) % 360) - 180})
+    new_ds = new_ds.sortby(lon_name)
+    new_ds[lon_name].attrs = attrs
+
+    steps = np.diff(new_ds[lon_name].values.astype("float64"))
+    if len(steps) > 0 and steps.max() > 1.5 * np.median(steps):
+        return ds
+
+    return new_ds
 
 
 def check_lon(x, ds):

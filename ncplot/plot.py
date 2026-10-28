@@ -28,7 +28,7 @@ import copy
 import numpy as np
 import os
 
-from ncplot.utils import get_dims, check_lon, check_lat
+from ncplot.utils import get_dims, check_lon, check_lat, normalise_lon
 
 hv.extension("bokeh")
 hv.Store.renderers
@@ -578,6 +578,10 @@ def view(x, vars=None, autoscale=True, out=None, **kwargs):
     if lon_name is not None:
         if "lon" not in lon_name:
             coastline = False
+
+    # coastlines are drawn on a -180-180 map, so longitudes must follow that convention
+    if coastline:
+        ds = normalise_lon(ds, lon_name)
 
     ff_dims = list(ds.coords)
 
