@@ -37,7 +37,7 @@ extras_require: dict() = {
 extras_require["complete"] = ["geoviews"]
 
 setup(name='ncplot',
-      version='0.4.1',
+      version='0.4.2',
       description=DESCRIPTION,
       long_description=long_description,
       long_description_content_type='text/markdown',
