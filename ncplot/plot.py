@@ -35,6 +35,38 @@ from ncplot.regrid import regrid_dataset, native_range, warn_notes
 hv.extension("bokeh")
 hv.Store.renderers
 
+
+def _give_frames_unique_ids():
+    """
+    Work around a holoviews bug that leaves a frame undrawn: a plot skips
+    redrawing when a new frame's ``_plot_id`` equals the last one drawn, and
+    the id defaults to ``id(element)``, a memory address. A freed element's
+    address can be reused by the next frame, so a slider step can keep the
+    frame before. Dynamic frames are given ids that are never reused instead.
+    """
+    try:
+        import itertools
+        from holoviews.plotting.plot import GenericElementPlot
+    except ImportError:
+        return
+    if getattr(GenericElementPlot._get_frame, "_ncplot_unique_ids", False):
+        return
+
+    ids = itertools.count()
+    original = GenericElementPlot._get_frame
+
+    def _get_frame(self, key):
+        frame = original(self, key)
+        if frame is not None and self.dynamic:
+            frame._plot_id = next(ids)
+        return frame
+
+    _get_frame._ncplot_unique_ids = True
+    GenericElementPlot._get_frame = _get_frame
+
+
+_give_frames_unique_ids()
+
 def as_raster():
     """
     Simple hack to rasterize when datashader is available.
