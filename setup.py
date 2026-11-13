@@ -40,7 +40,7 @@ extras_require["complete"] = ["geoviews", "cartopy", "datashader"]
 extras_require["test"] = ["pytest", "geoviews", "cartopy", "datashader"]
 
 setup(name='ncplot',
-      version='0.4.2',
+      version='0.4.3',
       description=DESCRIPTION,
       long_description=long_description,
       long_description_content_type='text/markdown',
