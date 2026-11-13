@@ -107,6 +107,25 @@ def test_the_sliders_step_through_the_times_and_layers():
                 assert not np.array_equal(np.nan_to_num(first), np.nan_to_num(shown))
 
 
+def test_stepping_the_sliders_always_redraws_the_frame():
+    """Holoviews skips redrawing a frame whose element has the same id as the
+    last one drawn, and an id is a memory address: a new element can get the
+    address of a freed one and be left out, so the plot shows the frame before.
+    That happens by chance, so the sliders are stepped through many fresh plots."""
+    ds = open_one(FVCOM_FILE)
+    for _ in range(25):
+        result = ncplot.view(FVCOM_FILE, vars="temp", coast=False)
+        plot = draw(result)
+        names = [d.name for d in result.kdims]
+        for step in (0, 1):
+            for layer in (1, 2, 3):
+                key = tuple(layer if name == "siglay" else result.kdims[names.index("time")].values[step] for name in names)
+                plot.update(key)
+                expected = ds["temp"].isel(time=step, siglay=layer - 1).values
+                shown = image_of(plot)
+                assert np.nanmin(shown) >= expected.min() - 1e-4 and np.nanmax(shown) <= expected.max() + 1e-4
+
+
 def test_a_given_colour_scale_is_used():
     plot = draw(ncplot.view(FVCOM_FILE, vars="temp", coast=False, clim=(5, 15)))
     colours = mapper_of(plot)
