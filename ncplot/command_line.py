@@ -3,6 +3,7 @@ from ncplot import view
 import sys
 import re
 import os
+import glob
 
 def is_url(x):
     regex = re.compile(
@@ -19,23 +20,29 @@ def is_url(x):
 
 
 def main():
+    """
+    The ``ncplot`` command: view the files, URLs or glob patterns it is given.
+    Returns a message (which ``sys.exit`` prints, exiting with status 1) if
+    there is nothing to view.
+    """
     if len(sys.argv) == 1:
         return "Please supply a file"
 
+    ff = []
     for x in sys.argv[1:]:
-        if os.path.exists(x):
-            ff = x
-            break
-        if is_url(x):
-            ff = x
+        if os.path.exists(x) or is_url(x):
+            ff.append(x)
+        elif glob.has_magic(x):
+            # a pattern the shell did not expand (it was quoted)
+            ff += sorted(glob.glob(x))
 
-    if ff is None:
-        return f"{ff} does not exist!"
+    if len(ff) == 0:
+        return f"{sys.argv[1]} does not exist!"
 
-    ff = sys.argv[1]
-
-    return view(ff)
-
+    if len(ff) == 1:
+        view(ff[0])
+    else:
+        view(ff)
 
 
 if __name__ == '__main__':

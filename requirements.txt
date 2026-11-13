@@ -8,4 +8,4 @@ panel
 pandas
 metpy
 jupyter_bokeh
-
+scipy

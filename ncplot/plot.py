@@ -29,6 +29,8 @@ import numpy as np
 import os
 
 from ncplot.utils import get_dims, check_lon, check_lat, normalise_lon
+from ncplot.loading import open_one
+from ncplot.regrid import regrid_dataset, native_range, warn_notes
 
 hv.extension("bokeh")
 hv.Store.renderers
@@ -400,12 +402,33 @@ def view(x, vars=None, autoscale=True, out=None, **kwargs):
                     nc_vars = ds.data_vars
                     ds = ds.to_xarray()
             except:
-                ds = xr.open_dataset(x)
+                ds = open_one(x)
         except:
             ds = xr.open_dataset(x, decode_times=False)
             warnings.warn("Warning: xarray could not decode times!")
     else:
         ds = x
+
+    # curvilinear grids (a global ocean grid's seam and north fold) and unstructured
+    # meshes (FVCOM) are put on a regular longitude-latitude grid, to be plotted as such
+    native_limits = None
+    regridded, notes = regrid_dataset(ds, vars)
+    if regridded is not None:
+        warn_notes(notes)
+        if vars is None:
+            vars = list(regridded.data_vars)
+        elif isinstance(vars, str):
+            vars = vars if vars in regridded.data_vars else list(regridded.data_vars)
+        else:
+            vars = [vv for vv in vars if vv in regridded.data_vars]
+        if len(vars) == 1 or isinstance(vars, str):
+            only = vars if isinstance(vars, str) else vars[0]
+            # the range of the values as they are: finding it from the regridded ones would read every frame
+            native_limits = native_range(ds, only)
+            if native_limits is not None and "clim" not in kwargs:
+                kwargs["clim"] = native_limits
+        ds = regridded
+        nc_vars = None
 
     if vars is None:
         if nc_vars is not None:
@@ -501,11 +524,8 @@ def view(x, vars=None, autoscale=True, out=None, **kwargs):
 
     switch_coords = False
 
-    try:
-        #import datashader
-        rasterize = True
-    except:
-        rasterize = False
+    # rasterize only if datashader is there to do it
+    rasterize = as_raster()
 
     if quadmesh:
         switch_coords = True
@@ -1104,9 +1124,13 @@ def view(x, vars=None, autoscale=True, out=None, **kwargs):
             vars = vars[0]
 
         if autoscale:
-            self_max = ds.rename({vars: "x_dim12345"}).x_dim12345.max()
-            self_min = ds.rename({vars: "x_dim12345"}).x_dim12345.min()
-            v_max = max(self_max.values, -self_min.values)
+            if native_limits is not None:
+                self_min, self_max = native_limits
+                v_max = max(self_max, -self_min)
+            else:
+                self_max = ds.rename({vars: "x_dim12345"}).x_dim12345.max()
+                self_min = ds.rename({vars: "x_dim12345"}).x_dim12345.min()
+                v_max = max(self_max.values, -self_min.values)
             if "clim" in kwargs:
                 v_max = float(max(-kwargs["clim"][0], kwargs["clim"][1]))
         else:

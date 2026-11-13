@@ -13,7 +13,7 @@
 
 Easy interactive viewing of NetCDF files in Python.
 
-An easy to use Python (3.6 and above) package for quickly plotting the contents of NetCDF files or xarray datasets in Python or on the command line. 
+An easy to use Python (3.9 and above) package for quickly plotting the contents of NetCDF files or xarray datasets in Python or on the command line. 
 
 This package is designed to work with [CF](https://cfconventions.org/) compliant NetCDF data.
 
@@ -76,6 +76,24 @@ ds.ncplot.view()
 
 
 
+
+## Model grids
+
+Regular longitude-latitude grids are plotted as they are. Other grids are put on a regular longitude-latitude
+grid first, so that they are plotted in the same way, with the same sliders:
+
+* **Curvilinear grids** with 2-D longitudes and latitudes, such as the native ocean grids of CMIP6 models, including
+  those with a seam where the longitudes jump by 360 degrees and a tripolar north fold.
+* **Unstructured grids**, whose cells run along one dimension with a longitude and latitude each.
+* **[FVCOM](https://github.com/FVCOM-GitHub/FVCOM) output**: the triangular mesh, with variables on its nodes or its elements, and
+  sigma layers as an extra slider.
+
+Each time step and level is put on the regular grid only when it is shown. For a large file name the variable you want,
+e.g. `view("fvcom_output.nc", vars="temp")`: with several variables (the default is all of them) ncplot has to read every
+time step of each to set its colour scale.
+
+Coastlines (`view("example.nc", coast=True)`) need geoviews and cartopy, and datashader draws large regular grids
+quickly: `pip install "ncplot[complete]"`.
 
 ## How to use on the command line
 

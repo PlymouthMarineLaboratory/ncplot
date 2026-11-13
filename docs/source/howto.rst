@@ -24,3 +24,19 @@ There is also built in support for xarray datasets::
 ncplot operates as a command line tool, letting you view the contents of a NetCDF file on a website. All you need to do is provide the file you want to look at::
 
     $ ncplot foo.nc
+
+
+Model grids
+~~~~~~~~~~~
+
+Regular longitude-latitude grids are plotted as they are. Curvilinear grids (2-D longitudes and latitudes, such as the native
+ocean grids of CMIP6 models, with their seam and tripolar north fold), unstructured grids, and the triangular mesh of FVCOM output
+are put on a regular longitude-latitude grid first, and plotted in the same way, with the same sliders. FVCOM's sigma layers get a slider
+of their own. Each time and level is put on the regular grid only when it is shown. For a large file name the variable you want, as
+with several variables (the default is all of them) ncplot has to read every time step of each to set its colour scale::
+
+    from ncplot import view
+
+    view("fvcom_output.nc", vars="temp")
+
+Coastlines need geoviews and cartopy, and datashader draws large regular grids quickly: ``pip install "ncplot[complete]"``.

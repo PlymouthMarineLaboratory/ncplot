@@ -34,7 +34,10 @@ extras_require: dict() = {
 }
 
 
-extras_require["complete"] = ["geoviews"]
+# coastlines are drawn by geoviews, with cartopy; datashader draws big grids quickly
+extras_require["complete"] = ["geoviews", "cartopy", "datashader"]
+# what the tests need
+extras_require["test"] = ["pytest", "geoviews", "cartopy", "datashader"]
 
 setup(name='ncplot',
       version='0.4.2',
@@ -42,7 +45,7 @@ setup(name='ncplot',
       long_description=long_description,
       long_description_content_type='text/markdown',
 
-      python_requires='>=3.6.1',
+      python_requires='>=3.9',
 
       entry_points={
         'console_scripts': [
@@ -51,11 +54,11 @@ setup(name='ncplot',
 
       classifiers=[
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
     ],
 
       project_urls=PROJECT_URLS,
